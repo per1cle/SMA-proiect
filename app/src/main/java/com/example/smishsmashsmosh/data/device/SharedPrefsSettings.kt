@@ -5,6 +5,7 @@ import com.example.smishsmashsmosh.domain.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.core.content.edit
 
 class SharedPrefsSettings(context: Context) : SettingsRepository {
     private val prefs = context.applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -12,7 +13,7 @@ class SharedPrefsSettings(context: Context) : SettingsRepository {
     override val vibrationEnabled: StateFlow<Boolean> = _vibration.asStateFlow()
 
     override fun setVibrationEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_VIBRATION, enabled).apply()
+        prefs.edit { putBoolean(KEY_VIBRATION, enabled) }
         _vibration.value = enabled
     }
 

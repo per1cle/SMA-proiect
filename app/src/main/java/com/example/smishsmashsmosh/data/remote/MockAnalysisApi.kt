@@ -6,11 +6,12 @@ import com.example.smishsmashsmosh.data.remote.dto.HighlightDto
 import com.example.smishsmashsmosh.data.remote.dto.ReasonDto
 import com.example.smishsmashsmosh.domain.model.Status
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Implementare falsa a contractului; se inlocuieste cu Retrofit cand exista backendul. */
 class MockAnalysisApi : AnalysisApi {
     override suspend fun analyze(request: AnalysisRequest): AnalysisResponse {
-        delay(800)
+        delay(800.milliseconds)
         val t = request.text.lowercase()
         val reasons = mutableListOf<ReasonDto>()
         Regex("https?://\\S+").find(request.text)?.let {
