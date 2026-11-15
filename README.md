@@ -1,5 +1,26 @@
-# Sisteme mobile si aplicatii
-#### This project is a mobile application designed to detect Romanian SMS phishing (smishing) attempts, specifically tailored for seniors through an accessible "Grandma Friendly Mode" interface with human-readable threat explanations. 
-#### The app features three main screens: a message scanner, a verdict screen with plain-language alerts, and a history log. 
-#### For data management, it implements full local CRUD operations using a SQLite database to view, annotate and delete past scans. The system integrates two hardware components: the phone's camera (sensor) for OCR text extraction via Google ML Kit, and the vibration motor (actuator) to physically warn users upon detecting high-risk messages. 
-#### Built natively in Android Studio using Kotlin, the app communicates via REST API with a mock Python FastAPI backend, which mimics the final XGBoost and SHAP explainability pipeline for development and evaluation purposes.
+# Sisteme mobile si aplicatii (React Native / Expo)
+
+Aplicatie mobila cross-platform (React Native + Expo + TypeScript) pentru detectarea tentativelor de phishing prin SMS/Email in limba romana (smishing), cu interfata accesibila ("Grandma Friendly Mode").
+
+## Functionalitati & Arhitectura
+- **3 Ecrane principale** (`@react-navigation/native-stack`):
+  - `HomeScreen`: Scanare mesaj (lipire text sau captura foto/OCR prin `expo-image-picker`), selectie tip (`SMS` / `EMAIL`), comutator vibratii si card de verdict.
+  - `HistoryScreen`: Istoric local cu filtrare dupa status (`SIGUR`, `SUSPECT`, `PERICOL`) si cautare dupa text/expeditor.
+  - `DetailScreen`: Vizualizare detalii scanare, adaugare/editare notita, marcare `Raportat` / `Fals pozitiv` si stergere.
+- **CRUD Local SQLite** (`expo-sqlite`): Tabel `scan_entries` gestionat prin `ScanDao` si `ScanHistoryRepository`.
+- **Hardware**:
+  - **Senzor**: Camera telefonului (`expo-image-picker`) pentru capturarea mesajelor suspecte.
+  - **Actuator**: Motorul de vibratii (`Vibration` + `expo-haptics`) cu pattern-uri diferentiate pentru `SAFE`, `SUSPICIOUS` si `DANGER`.
+- **Backend API**: Comunicare REST (`fetch`) cu backend Python FastAPI (`POST /v1/analyze`) + `MockAnalysisApi` preconfigurat pentru dezvoltare si testare.
+
+## Rulare proiect
+1. Instaleaza [Node.js LTS](https://nodejs.org/).
+2. Instaleaza dependentele:
+   ```bash
+   npm install
+   ```
+3. Porneste serverul Expo:
+   ```bash
+   npx expo start
+   ```
+4. Scaneaza codul QR cu aplicatia **Expo Go** pe telefon sau apasa `a` pentru emulatorul Android.
