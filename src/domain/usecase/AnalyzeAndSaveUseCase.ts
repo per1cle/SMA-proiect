@@ -7,7 +7,7 @@ export class AnalyzeAndSaveUseCase {
   constructor(
     private readonly analysisRepo: AnalysisRepository,
     private readonly historyRepo: ScanHistoryRepository
-  ) {}
+  ) { }
 
   async execute(input: AnalysisInput, saveText = true): Promise<ScanEntry> {
     const result = await this.analysisRepo.analyze(input);

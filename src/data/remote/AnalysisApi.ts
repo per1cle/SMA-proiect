@@ -5,7 +5,7 @@ export interface AnalysisApi {
 }
 
 export class RealAnalysisApi implements AnalysisApi {
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly baseUrl: string) { }
 
   async analyze(request: AnalysisRequest): Promise<AnalysisResponse> {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/v1/analyze`, {

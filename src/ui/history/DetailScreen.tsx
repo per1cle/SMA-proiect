@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,13 +15,13 @@ import { useApp } from '../../context/AppContext';
 import { ScanEntry } from '../../domain/model/Models';
 import { ResultCard } from '../common/ResultCard';
 import { RootStackParamList } from '../navigation/AppNavigation';
-import { Colors } from '../theme/Theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
 export const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { id } = route.params;
   const {
+    palette,
     getEntryById,
     setNote: saveEntryNote,
     toggleReported,
@@ -43,13 +44,16 @@ export const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (!entry) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Nu exista intrarea.</Text>
+      <View style={[styles.emptyContainer, { backgroundColor: palette.background }]}>
+        <Text style={[styles.emptyText, { color: palette.textSecondary }]}>
+          Nu exista intrarea.
+        </Text>
       </View>
     );
   }
 
   const handleSaveNote = async () => {
+    Keyboard.dismiss();
     const updated = await saveEntryNote(entry, noteInput.trim());
     setEntry(updated);
     setNoteInput('');
@@ -73,62 +77,176 @@ export const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: palette.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: palette.background }}
+        contentContainerStyle={[styles.container, { backgroundColor: palette.background }]}
+        contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
         <ResultCard result={entry.result} />
 
-        <Text style={styles.sectionLabel}>
-          Mesaj ({entry.type}, {entry.source}):
-        </Text>
-        <Text style={styles.messageText}>{entry.text ?? '(text nepastrat)'}</Text>
-
-        {entry.sender && <Text style={styles.senderText}>Expeditor: {entry.sender}</Text>}
-
-        {entry.note.trim().length > 0 && (
-          <Text style={styles.savedNoteTitle}>Notita ta: {entry.note}</Text>
-        )}
-
-        <TextInput
-          style={styles.input}
-          value={noteInput}
-          onChangeText={(val) => {
-            setNoteInput(val);
-            setSavedBanner(false);
-          }}
-          placeholder="Notita"
-          placeholderTextColor={Colors.textSecondary}
-        />
-
-        <Pressable style={styles.primaryButton} onPress={handleSaveNote}>
-          <Text style={styles.primaryButtonText}>Salveaza notita</Text>
-        </Pressable>
-
-        {savedBanner && <Text style={styles.savedConfirmation}>Notita salvata</Text>}
-
-        <View style={styles.chipRow}>
-          <Pressable
-            onPress={handleToggleReported}
-            style={[styles.chip, entry.reported && styles.chipSelected]}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: palette.surface, borderColor: palette.border },
+          ]}
+        >
+          <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+            Mesaj ({entry.type}, {entry.source})
+          </Text>
+          <Text
+            style={[
+              styles.messageText,
+              {
+                backgroundColor: palette.surfaceSubtle,
+                borderColor: palette.border,
+                color: palette.textPrimary,
+              },
+            ]}
           >
-            <Text style={[styles.chipText, entry.reported && styles.chipTextSelected]}>
-              {entry.reported ? '✓ ' : ''}Raportat
-            </Text>
-          </Pressable>
+            {entry.text ?? '(text nepastrat)'}
+          </Text>
 
-          <Pressable
-            onPress={handleToggleFalsePositive}
-            style={[styles.chip, entry.falsePositive && styles.chipSelected]}
-          >
-            <Text style={[styles.chipText, entry.falsePositive && styles.chipTextSelected]}>
-              {entry.falsePositive ? '✓ ' : ''}Fals pozitiv
+          {entry.sender && (
+            <Text style={[styles.senderText, { color: palette.textSecondary }]}>
+              Expeditor: <Text style={{ color: palette.textPrimary }}>{entry.sender}</Text>
             </Text>
-          </Pressable>
+          )}
         </View>
 
-        <Pressable style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteButtonText}>Sterge</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: palette.surface, borderColor: palette.border },
+          ]}
+        >
+          <Text style={[styles.sectionLabel, { color: palette.textSecondary }]}>
+            Notita si actiuni
+          </Text>
+
+          {entry.note.trim().length > 0 && (
+            <View
+              style={[
+                styles.savedNoteBox,
+                { backgroundColor: palette.primarySoft },
+              ]}
+            >
+              <Text style={[styles.savedNoteTitle, { color: palette.chipSelectedText }]}>
+                Notita ta: {entry.note}
+              </Text>
+            </View>
+          )}
+
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: palette.surfaceSubtle,
+                borderColor: palette.border,
+                color: palette.textPrimary,
+              },
+            ]}
+            value={noteInput}
+            onChangeText={(val) => {
+              setNoteInput(val);
+              setSavedBanner(false);
+            }}
+            placeholder="Adauga sau modifica notita..."
+            placeholderTextColor={palette.textSecondary}
+            returnKeyType="done"
+            onSubmitEditing={handleSaveNote}
+          />
+
+          <Pressable
+            style={[styles.primaryButton, { backgroundColor: palette.primary }]}
+            onPress={handleSaveNote}
+          >
+            <Text style={styles.primaryButtonText}>Salveaza notita</Text>
+          </Pressable>
+
+          {savedBanner && (
+            <Text
+              style={[
+                styles.savedConfirmation,
+                { color: palette.isDark ? '#4ADE80' : '#15803D' },
+              ]}
+            >
+              Notita a fost salvata
+            </Text>
+          )}
+
+          <View style={styles.chipRow}>
+            <Pressable
+              onPress={handleToggleReported}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: entry.reported
+                    ? palette.chipSelectedBg
+                    : palette.surfaceSubtle,
+                  borderColor: entry.reported ? palette.primary : palette.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  {
+                    color: entry.reported
+                      ? palette.chipSelectedText
+                      : palette.textPrimary,
+                  },
+                ]}
+              >
+                {entry.reported ? 'Raportat (activ)' : 'Marcheaza ca Raportat'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={handleToggleFalsePositive}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: entry.falsePositive
+                    ? palette.chipSelectedBg
+                    : palette.surfaceSubtle,
+                  borderColor: entry.falsePositive ? palette.primary : palette.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  {
+                    color: entry.falsePositive
+                      ? palette.chipSelectedText
+                      : palette.textPrimary,
+                  },
+                ]}
+              >
+                {entry.falsePositive ? 'Fals pozitiv (activ)' : 'Marcheaza Fals pozitiv'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <Pressable
+          style={[
+            styles.deleteButton,
+            {
+              backgroundColor: palette.surface,
+              borderColor: palette.error,
+            },
+          ]}
+          onPress={handleDelete}
+        >
+          <Text style={[styles.deleteButtonText, { color: palette.error }]}>
+            Sterge din istoric
+          </Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -138,105 +256,95 @@ export const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
-    padding: 16,
-    backgroundColor: Colors.background,
+    padding: 18,
   },
   emptyText: {
-    fontSize: 18,
-    color: Colors.textSecondary,
+    fontSize: 17,
   },
   container: {
-    padding: 16,
-    gap: 12,
-    backgroundColor: Colors.background,
+    padding: 18,
+    paddingBottom: 40,
+    gap: 14,
     flexGrow: 1,
   },
+  card: {
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    gap: 12,
+  },
   sectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   messageText: {
-    fontSize: 18,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.surface,
-    padding: 12,
-    borderRadius: 10,
+    fontSize: 17,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
+    lineHeight: 24,
   },
   senderText: {
-    fontSize: 16,
-    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  savedNoteBox: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   savedNoteTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   input: {
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 18,
-    backgroundColor: Colors.surface,
-    color: Colors.textPrimary,
+    fontSize: 17,
   },
   primaryButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    borderRadius: 28,
+    paddingVertical: 15,
+    borderRadius: 14,
     alignItems: 'center',
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '800',
   },
   savedConfirmation: {
-    fontSize: 16,
-    color: '#2E7D32',
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
   chipRow: {
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
+    marginTop: 2,
   },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  chipSelected: {
-    backgroundColor: Colors.chipSelectedBg,
-    borderColor: Colors.primary,
   },
   chipText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  chipTextSelected: {
-    color: Colors.chipSelectedText,
+    fontSize: 15,
+    fontWeight: '700',
   },
   deleteButton: {
     borderWidth: 1.5,
-    borderColor: Colors.error,
-    paddingVertical: 14,
-    borderRadius: 28,
+    paddingVertical: 15,
+    borderRadius: 16,
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    marginTop: 8,
+    marginTop: 4,
   },
   deleteButtonText: {
-    color: Colors.error,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });

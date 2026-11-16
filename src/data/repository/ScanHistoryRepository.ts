@@ -13,7 +13,7 @@ export interface ScanHistoryRepository {
 }
 
 export class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
-  constructor(private readonly dao: ScanDao) {}
+  constructor(private readonly dao: ScanDao) { }
 
   async add(entry: ScanEntry): Promise<number> {
     const { id: _id, ...entityWithoutId } = toEntity(entry);

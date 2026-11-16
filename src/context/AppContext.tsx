@@ -6,6 +6,7 @@ import {
   settingsRepository,
 } from '../di/AppContainer';
 import { AnalysisInput, ScanEntry, Status } from '../domain/model/Models';
+import { getPalette, ThemePalette } from '../ui/theme/Theme';
 
 export type AnalysisUiState =
   | { status: 'idle' }
@@ -14,6 +15,12 @@ export type AnalysisUiState =
   | { status: 'error'; message: string };
 
 interface AppContextValue {
+  // Theme state
+  darkMode: boolean;
+  setDarkMode: (dark: boolean) => Promise<void>;
+  toggleDarkMode: () => Promise<void>;
+  palette: ThemePalette;
+
   // Analysis state (echivalent AnalysisViewModel)
   analysisState: AnalysisUiState;
   vibrationEnabled: boolean;
@@ -39,6 +46,7 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [darkMode, setDarkModeState] = useState<boolean>(false);
   const [analysisState, setAnalysisState] = useState<AnalysisUiState>({ status: 'idle' });
   const [vibrationEnabled, setVibrationState] = useState<boolean>(true);
 
@@ -48,7 +56,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     settingsRepository.getVibrationEnabled().then(setVibrationState);
+    settingsRepository.getDarkMode().then(setDarkModeState);
   }, []);
+
+  const setDarkMode = useCallback(async (dark: boolean) => {
+    setDarkModeState(dark);
+    await settingsRepository.setDarkMode(dark);
+  }, []);
+
+  const toggleDarkMode = useCallback(async () => {
+    setDarkModeState((prev) => {
+      const next = !prev;
+      settingsRepository.setDarkMode(next);
+      return next;
+    });
+  }, []);
+
+  const palette = getPalette(darkMode);
 
   const refreshHistory = useCallback(async () => {
     try {
@@ -137,6 +161,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider
       value={{
+        darkMode,
+        setDarkMode,
+        toggleDarkMode,
+        palette,
         analysisState,
         vibrationEnabled,
         setVibrationEnabled,

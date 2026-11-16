@@ -1,6 +1,7 @@
 import React, { useLayoutEffect } from 'react';
 import {
   FlatList,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -11,14 +12,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useApp } from '../../context/AppContext';
 import { Status } from '../../domain/model/Models';
 import { RootStackParamList } from '../navigation/AppNavigation';
-import { Colors, statusColor, statusLabel } from '../theme/Theme';
+import { statusColor, statusLabel } from '../theme/Theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'History'>;
 
 const FILTER_STATUSES: Status[] = ['SAFE', 'SUSPICIOUS', 'DANGER'];
 
 export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
-  const { entries, statusFilter, setStatusFilter, query, setQuery, clearHistory } = useApp();
+  const { palette, entries, statusFilter, setStatusFilter, query, setQuery, clearHistory } =
+    useApp();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -31,7 +33,9 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
           <Text
             style={[
               styles.clearBtnText,
-              entries.length === 0 && styles.clearBtnTextDisabled,
+              {
+                color: entries.length === 0 ? palette.buttonDisabledText : palette.error,
+              },
             ]}
           >
             Sterge tot
@@ -39,26 +43,50 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
         </Pressable>
       ),
     });
-  }, [navigation, clearHistory, entries.length]);
+  }, [navigation, clearHistory, entries.length, palette]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.background }]}>
       {/* Bara de cautare */}
       <TextInput
-        style={styles.searchInput}
+        style={[
+          styles.searchInput,
+          {
+            backgroundColor: palette.surface,
+            borderColor: palette.border,
+            color: palette.textPrimary,
+          },
+        ]}
         value={query}
         onChangeText={setQuery}
-        placeholder="Cauta"
-        placeholderTextColor={Colors.textSecondary}
+        placeholder="Cauta dupa mesaj sau expeditor..."
+        placeholderTextColor={palette.textSecondary}
+        returnKeyType="search"
+        onSubmitEditing={Keyboard.dismiss}
       />
 
       {/* Filtre dupa status */}
       <View style={styles.chipRow}>
         <Pressable
           onPress={() => setStatusFilter(null)}
-          style={[styles.chip, statusFilter === null && styles.chipSelected]}
+          style={[
+            styles.chip,
+            {
+              backgroundColor:
+                statusFilter === null ? palette.chipSelectedBg : palette.surface,
+              borderColor: statusFilter === null ? palette.primary : palette.border,
+            },
+          ]}
         >
-          <Text style={[styles.chipText, statusFilter === null && styles.chipTextSelected]}>
+          <Text
+            style={[
+              styles.chipText,
+              {
+                color:
+                  statusFilter === null ? palette.chipSelectedText : palette.textSecondary,
+              },
+            ]}
+          >
             Toate
           </Text>
         </Pressable>
@@ -69,9 +97,22 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
             <Pressable
               key={st}
               onPress={() => setStatusFilter(st)}
-              style={[styles.chip, selected && styles.chipSelected]}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: selected ? palette.chipSelectedBg : palette.surface,
+                  borderColor: selected ? palette.primary : palette.border,
+                },
+              ]}
             >
-              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  {
+                    color: selected ? palette.chipSelectedText : palette.textSecondary,
+                  },
+                ]}
+              >
                 {statusLabel(st)}
               </Text>
             </Pressable>
@@ -80,32 +121,66 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {entries.length === 0 ? (
-        <Text style={styles.emptyText}>Nu exista analize.</Text>
+        <View
+          style={[
+            styles.emptyCard,
+            { backgroundColor: palette.surface, borderColor: palette.border },
+          ]}
+        >
+          <Text style={[styles.emptyText, { color: palette.textSecondary }]}>
+            Nu exista analize salvate in istoric.
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={entries}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
+          keyboardDismissMode="on-drag"
           renderItem={({ item }) => {
-            const snippet = item.text ? item.text.slice(0, 80) : '(text nepastrat)';
+            const snippet = item.text ? item.text.slice(0, 90) : '(text nepastrat)';
             const dateStr = new Date(item.createdAt).toLocaleString('ro-RO');
-            const meta = item.sender ? `${dateStr} - ${item.sender}` : dateStr;
+            const meta = item.sender ? `${dateStr} • ${item.sender}` : dateStr;
+            const stColor = statusColor(item.result.status, palette.isDark);
 
             return (
               <Pressable
-                style={styles.card}
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: palette.surface,
+                    borderColor: palette.border,
+                  },
+                ]}
                 onPress={() => navigation.navigate('Detail', { id: item.id })}
               >
-                <Text
-                  style={[styles.cardStatus, { color: statusColor(item.result.status) }]}
-                >
-                  {statusLabel(item.result.status)}
-                </Text>
-                <Text style={styles.cardBody}>{snippet}</Text>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.badge, { backgroundColor: stColor }]}>
+                    <Text style={styles.badgeText}>{statusLabel(item.result.status)}</Text>
+                  </View>
+                  <Text style={[styles.typeTag, { color: palette.textSecondary }]}>
+                    {item.type}
+                  </Text>
+                </View>
+
+                <Text style={[styles.cardBody, { color: palette.textPrimary }]}>{snippet}</Text>
+
                 {item.note.trim().length > 0 && (
-                  <Text style={styles.cardNote}>Notita: {item.note}</Text>
+                  <View
+                    style={[
+                      styles.noteBox,
+                      {
+                        backgroundColor: palette.primarySoft,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.cardNote, { color: palette.chipSelectedText }]}>
+                      Notita: {item.note}
+                    </Text>
+                  </View>
                 )}
-                <Text style={styles.cardDate}>{meta}</Text>
+
+                <Text style={[styles.cardDate, { color: palette.textSecondary }]}>{meta}</Text>
               </Pressable>
             );
           }}
@@ -118,19 +193,15 @@ export const HistoryScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
-    backgroundColor: Colors.background,
+    padding: 18,
+    gap: 12,
   },
   searchInput: {
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
+    borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 18,
-    backgroundColor: Colors.surface,
-    color: Colors.textPrimary,
+    paddingVertical: 12,
+    fontSize: 16,
   },
   chipRow: {
     flexDirection: 'row',
@@ -138,58 +209,72 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  chipSelected: {
-    backgroundColor: Colors.chipSelectedBg,
-    borderColor: Colors.primary,
   },
   chipText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
   },
-  chipTextSelected: {
-    color: Colors.chipSelectedText,
+  emptyCard: {
+    borderRadius: 18,
+    padding: 24,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginTop: 8,
   },
   emptyText: {
-    fontSize: 18,
-    color: Colors.textSecondary,
-    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '500',
   },
   listContent: {
-    gap: 10,
-    paddingBottom: 24,
+    gap: 12,
+    paddingBottom: 28,
   },
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 18,
+    padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 4,
+    gap: 8,
   },
-  cardStatus: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  typeTag: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   cardBody: {
     fontSize: 16,
-    color: Colors.textPrimary,
+    lineHeight: 22,
+  },
+  noteBox: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
   },
   cardNote: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
   },
   cardDate: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   clearBtn: {
@@ -197,11 +282,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   clearBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.error,
-  },
-  clearBtnTextDisabled: {
-    color: '#BDBDBD',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

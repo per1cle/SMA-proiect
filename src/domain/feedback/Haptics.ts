@@ -31,11 +31,11 @@ export class DeviceHaptics implements Haptics {
     try {
       Vibration.vibrate(pattern);
       if (status === 'DANGER') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error).catch(() => {});
+        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error).catch(() => { });
       } else if (status === 'SUSPICIOUS') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Warning).catch(() => {});
+        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Warning).catch(() => { });
       } else if (status === 'SAFE') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success).catch(() => {});
+        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success).catch(() => { });
       }
     } catch {
       // Ignora daca dispozitivul nu suporta vibratii

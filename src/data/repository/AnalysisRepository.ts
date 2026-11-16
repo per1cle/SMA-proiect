@@ -7,7 +7,7 @@ export interface AnalysisRepository {
 }
 
 export class AnalysisRepositoryImpl implements AnalysisRepository {
-  constructor(private readonly api: AnalysisApi) {}
+  constructor(private readonly api: AnalysisApi) { }
 
   async analyze(input: AnalysisInput): Promise<AnalysisResult> {
     try {
