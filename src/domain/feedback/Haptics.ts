@@ -19,6 +19,8 @@ export const VibrationPatterns = {
   },
 };
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export interface Haptics {
   signal(status: Status): void;
 }
@@ -29,16 +31,35 @@ export class DeviceHaptics implements Haptics {
     if (!pattern) return;
 
     try {
+      // Vibratia puternica de motor (functioneaza cand iPhone-ul NU este pe Silent / DND)
       Vibration.vibrate(pattern);
-      if (status === 'DANGER') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error).catch(() => { });
+      // Fallback Taptic Engine (functioneaza chiar si cand iPhone-ul ESTE pe Silent)
+      void this.playHapticSequence(status);
+    } catch {
+      // Ignora daca dispozitivul nu suporta vibratii
+    }
+  }
+
+  private async playHapticSequence(status: Status): Promise<void> {
+    try {
+      if (status === 'SAFE') {
+        await ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);
       } else if (status === 'SUSPICIOUS') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Warning).catch(() => { });
-      } else if (status === 'SAFE') {
-        ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success).catch(() => { });
+        await ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Warning);
+        await delay(250);
+        await ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+      } else if (status === 'DANGER') {
+        await ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
+        await delay(300);
+        await ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
+        await delay(300);
+        await ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
       }
     } catch {
       // Ignora daca dispozitivul nu suporta vibratii
     }
   }
 }
+
+
+

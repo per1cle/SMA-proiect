@@ -17,7 +17,6 @@ export interface Reason {
   highlight?: TextRange | null;
 }
 
-/** Rezultatul analizei, independent de formatul backendului. */
 export interface AnalysisResult {
   status: Status;
   riskScore: number;
@@ -26,7 +25,6 @@ export interface AnalysisResult {
   modelVersion: string;
 }
 
-/** Intrarea unei analize, independenta de transport. */
 export interface AnalysisInput {
   text: string;
   type: MessageType;
@@ -37,10 +35,9 @@ export interface AnalysisInput {
   locale?: string;
 }
 
-/** Model de domeniu pentru istoric (CRUD). */
 export interface ScanEntry {
   id: number;
-  text: string | null; // null daca utilizatorul nu vrea sa pastreze textul
+  text: string | null;
   type: MessageType;
   source: ScanSource;
   sender?: string | null;
