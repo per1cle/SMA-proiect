@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "SmishSmashSmosh",
+    "slug": "smish-smash-smosh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.smishsmashsmosh"
+    },
+    "android": {
+      "package": "com.example.smishsmashsmosh",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Aplicatia are nevoie de acces la galerie pentru a scana capturi de ecran cu mesaje suspecte.",
+          "cameraPermission": "Aplicatia are nevoie de acces la camera pentru a fotografia mesaje suspecte."
+        }
+      ]
+    ]
+  }
+}
